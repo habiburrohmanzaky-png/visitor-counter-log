@@ -1,0 +1,629 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Web Visitor Counter Log</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+            padding: 30px 16px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        header {
+            background: #1e293b;
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .connection {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 7px 12px;
+            background: #334155;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card p {
+            font-size: 30px;
+            font-weight: bold;
+            color: #2563eb;
+            overflow-wrap: anywhere;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .panel h2 {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
+        button {
+            border: none;
+            padding: 11px 18px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            padding: 8px 12px;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .page-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid #e2e8f0;
+            gap: 12px;
+        }
+
+        .page-stat:last-child {
+            border-bottom: none;
+        }
+
+        .page-name {
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .page-count {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .empty {
+            color: #94a3b8;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 7px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        footer {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            padding: 15px;
+        }
+
+        @media (max-width: 700px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .panel {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>Web Visitor Counter Log</h1>
+
+        <p>
+            Studi Kasus #5 — Sistem Pencatat Statistik
+            Kunjungan Situs Web Laboratorium
+        </p>
+
+        <div class="connection" id="connectionStatus">
+            Menghubungkan ke Backend...
+        </div>
+    </header>
+
+    <!-- Statistik Utama -->
+    <section class="stats">
+
+        <div class="stat-card">
+            <h3>Total Hit Kunjungan</h3>
+            <p id="totalHits">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Pengunjung Unik</h3>
+            <p id="uniqueVisitors">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Halaman Terpopuler</h3>
+            <p id="popularPage">-</p>
+        </div>
+
+    </section>
+
+    <!-- Form Tambah Log -->
+    <section class="panel">
+
+        <h2>[+] Catat Kunjungan Baru (POST /logs)</h2>
+
+        <form id="visitorForm">
+
+            <div class="form-group">
+                <label for="page">
+                    Halaman yang Dikunjungi *
+                </label>
+
+                <input
+                    type="text"
+                    id="page"
+                    placeholder="Contoh: /home"
+                    maxlength="200"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="visitor">
+                    Nama / NIM Pengunjung
+                </label>
+
+                <input
+                    type="text"
+                    id="visitor"
+                    placeholder="Contoh: 12345678"
+                    maxlength="200"
+                >
+            </div>
+
+            <button type="submit" class="btn-primary">
+                Simpan Log Kunjungan
+            </button>
+
+        </form>
+
+        <div id="message" class="message"></div>
+
+    </section>
+
+    <!-- Statistik Halaman -->
+    <section class="panel">
+
+        <h2>Statistik Hit per Halaman</h2>
+
+        <div id="pageStats">
+            <p class="empty">Belum ada data</p>
+        </div>
+
+    </section>
+
+    <!-- Riwayat Log -->
+    <section class="panel">
+
+        <h2>Daftar Riwayat Kunjungan (GET & DELETE /logs)</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>Halaman</th>
+                        <th>Pengunjung</th>
+                        <th>IP</th>
+                        <th>Waktu (UTC)</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody id="logsTable">
+                    <tr>
+                        <td colspan="6" class="empty">
+                            Memuat data...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+    <footer>
+        Web Visitor Counter Log | Studi Kasus #5
+    </footer>
+
+</div>
+
+<script>
+    const API_URL = "/api";
+
+    const totalHits = document.getElementById("totalHits");
+    const uniqueVisitors = document.getElementById("uniqueVisitors");
+    const popularPage = document.getElementById("popularPage");
+    const pageStats = document.getElementById("pageStats");
+    const logsTable = document.getElementById("logsTable");
+    const connectionStatus = document.getElementById("connectionStatus");
+    const message = document.getElementById("message");
+    const visitorForm = document.getElementById("visitorForm");
+
+    // Menampilkan pesan
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = "message " + type;
+    }
+
+    // Mengambil dan menampilkan seluruh data
+    async function loadLogs() {
+
+        try {
+
+            const response = await fetch(`${API_URL}/logs`, {
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error("Gagal mengambil data backend");
+            }
+
+            const data = await response.json();
+
+            connectionStatus.textContent = "● Backend Terhubung";
+            connectionStatus.style.color = "#86efac";
+
+            renderStatistics(data);
+            renderPageStats(data.hits_per_page);
+            renderLogs(data.logs);
+
+        } catch (error) {
+
+            connectionStatus.textContent = "● Backend Tidak Terhubung";
+            connectionStatus.style.color = "#fca5a5";
+
+            logsTable.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty">
+                        Gagal memuat data dari backend
+                    </td>
+                </tr>
+            `;
+
+            console.error(error);
+        }
+    }
+
+    // Menampilkan statistik utama
+    function renderStatistics(data) {
+
+        totalHits.textContent = data.total_hits;
+        uniqueVisitors.textContent = data.unique_visitors;
+
+        const pages = Object.entries(data.hits_per_page);
+
+        if (pages.length > 0) {
+            popularPage.textContent = pages[0][0];
+        } else {
+            popularPage.textContent = "-";
+        }
+    }
+
+    // Menampilkan statistik setiap halaman
+    function renderPageStats(pages) {
+
+        const entries = Object.entries(pages);
+
+        if (entries.length === 0) {
+            pageStats.innerHTML = `
+                <p class="empty">Belum ada data</p>
+            `;
+            return;
+        }
+
+        pageStats.innerHTML = "";
+
+        entries.forEach(([page, count]) => {
+
+            const row = document.createElement("div");
+            row.className = "page-stat";
+
+            const name = document.createElement("span");
+            name.className = "page-name";
+            name.textContent = page;
+
+            const badge = document.createElement("span");
+            badge.className = "page-count";
+            badge.textContent = count + " hit";
+
+            row.appendChild(name);
+            row.appendChild(badge);
+
+            pageStats.appendChild(row);
+        });
+    }
+
+    // Menampilkan tabel riwayat kunjungan
+    function renderLogs(logs) {
+
+        if (logs.length === 0) {
+            logsTable.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty">
+                        Belum ada riwayat kunjungan
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        logsTable.innerHTML = "";
+
+        logs.forEach((log, index) => {
+
+            const row = document.createElement("tr");
+
+            const values = [
+                index,
+                log.page,
+                log.visitor,
+                log.ip,
+                log.timestamp
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value ?? "-";
+                row.appendChild(cell);
+            });
+
+            const actionCell = document.createElement("td");
+
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "btn-danger";
+            deleteButton.textContent = "Hapus";
+
+            deleteButton.addEventListener("click", () => {
+                deleteLog(index);
+            });
+
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+
+            logsTable.appendChild(row);
+        });
+    }
+
+    // Menambahkan log baru (POST)
+    visitorForm.addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const page = document.getElementById("page").value.trim();
+        const visitor = document.getElementById("visitor").value.trim();
+
+        try {
+
+            const response = await fetch(`${API_URL}/logs`, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    page: page,
+                    visitor: visitor
+                })
+
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Gagal menyimpan log");
+            }
+
+            showMessage(result.message, "success");
+
+            visitorForm.reset();
+
+            await loadLogs();
+
+        } catch (error) {
+
+            showMessage(error.message, "error");
+
+        }
+
+    });
+
+    // Menghapus log berdasarkan index (DELETE)
+    async function deleteLog(index) {
+
+        const confirmed = confirm(
+            `Apakah kamu yakin ingin menghapus log index ${index}?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                `${API_URL}/logs?index=${index}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Gagal menghapus log");
+            }
+
+            showMessage(result.message, "success");
+
+            await loadLogs();
+
+        } catch (error) {
+
+            showMessage(error.message, "error");
+
+        }
+    }
+
+    // Memuat data saat halaman dibuka
+    loadLogs();
+
+    // Memperbarui statistik setiap 5 detik
+    setInterval(loadLogs, 5000);
+
+</script>
+
+</body>
+</html>
